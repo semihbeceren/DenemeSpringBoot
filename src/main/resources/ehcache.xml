@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache>
+
+    <cache name="persons" maxBytesLocalHeap="50m" timeToLiveSeconds="300">
+    </cache>
+
+</ehcache>
