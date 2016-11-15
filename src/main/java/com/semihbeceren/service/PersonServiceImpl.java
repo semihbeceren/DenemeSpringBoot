@@ -4,6 +4,7 @@ import com.semihbeceren.model.Person;
 import com.semihbeceren.repository.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.metrics.CounterService;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -26,9 +27,13 @@ public class PersonServiceImpl implements PersonService{
     @Autowired
     private PersonRepository personRepository;
 
+    @Autowired
+    private CounterService counterService;
+
     @Override
     @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
     public Collection<Person> findAll() {
+        counterService.increment("method.invoked.personServiceImpl.findAll");
         Collection<Person> persons = personRepository.findAll();
         return persons;
     }
