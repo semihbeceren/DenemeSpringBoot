@@ -6,12 +6,15 @@ import com.semihbeceren.service.PersonService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.EntityLinks;
+import org.springframework.hateoas.ExposesResourceFor;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collection;
 import java.util.concurrent.Future;
 
 /**
@@ -19,6 +22,7 @@ import java.util.concurrent.Future;
  */
 @RestController
 @RequestMapping(value = "/api/persons", produces = MediaType.APPLICATION_JSON_VALUE)
+@ExposesResourceFor(Person.class)
 public class PersonController extends BaseController{
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -28,19 +32,22 @@ public class PersonController extends BaseController{
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private EntityLinks entityLinks;
+
     @RequestMapping(value = "", method = RequestMethod.GET)
-    public ResponseEntity<Collection<Person>> getPersons(){
-        Collection<Person> persons = personService.findAll();
-        return new ResponseEntity<Collection<Person>>(persons, HttpStatus.OK);
+    public ResponseEntity<Resources<Person>> getPersons(){
+        Resources<Person> resources = new Resources<Person>(personService.findAll());
+        resources.add(entityLinks.linkToCollectionResource(Person.class));
+        return new ResponseEntity<Resources<Person>>(resources, HttpStatus.OK);
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
-    public ResponseEntity<Person> getPerson(@PathVariable("id") Long id){
+    public ResponseEntity<Resource<Person>> getPerson(@PathVariable("id") Long id){
         Person person = personService.findOne(id);
-        if(person == null){
-            return new ResponseEntity<Person>(HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<Person>(person, HttpStatus.OK);
+        Resource<Person> resource = new Resource<Person>(person);
+        resource.add(entityLinks.linkToSingleResource(Person.class, id));
+        return new ResponseEntity<Resource<Person>>(resource, HttpStatus.OK);
     }
 
     @RequestMapping(value = "", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -52,9 +59,6 @@ public class PersonController extends BaseController{
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Person> updatePerson(@RequestBody Person person){
         Person updatedPerson = personService.update(person);
-        if(updatedPerson == null){
-            return new ResponseEntity<Person>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
         return new ResponseEntity<Person>(updatedPerson, HttpStatus.OK);
     }
 
