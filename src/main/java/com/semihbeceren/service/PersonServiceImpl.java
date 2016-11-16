@@ -1,11 +1,13 @@
 package com.semihbeceren.service;
 
+import com.semihbeceren.exception.ObjectNotFoundException;
+import com.semihbeceren.exception.ObjectNotFoundForUpdateException;
 import com.semihbeceren.model.Person;
 import com.semihbeceren.repository.PersonRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.metrics.CounterService;
-import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -24,6 +26,8 @@ import java.util.Collection;
 //Parametresiz Transactional notasyonu bu değerleri default olarak sağlar = @Transactional(propagation = Propagation.REQUIRED, readOnly = false)
 public class PersonServiceImpl implements PersonService{
 
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
+
     @Autowired
     private PersonRepository personRepository;
 
@@ -41,8 +45,11 @@ public class PersonServiceImpl implements PersonService{
     @Override
     @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
     @Cacheable(value = "persons", key = "#id")
-    public Person findOne(Long id) {
+    public Person findOne(Long id) throws ObjectNotFoundException {
         Person person = personRepository.findOne(id);
+        if(person == null){
+            throw new ObjectNotFoundException();
+        }
         return person;
     }
 
@@ -62,11 +69,9 @@ public class PersonServiceImpl implements PersonService{
     @CachePut(value = "persons", key = "#person.id")
     public Person update(Person person) {
         Person personToUpdate = personRepository.findOne(person.getId());
-        //Update edilecek kayıt bulunmuş olmalı.
         if(personToUpdate == null){
-            return null;
+            throw new ObjectNotFoundForUpdateException();
         }
-
         Person updatedPerson = personRepository.save(person);
         return updatedPerson;
     }
