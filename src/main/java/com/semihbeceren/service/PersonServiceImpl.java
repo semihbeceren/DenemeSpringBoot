@@ -28,11 +28,15 @@ public class PersonServiceImpl implements PersonService{
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Autowired
-    private PersonRepository personRepository;
+
+    private final PersonRepository personRepository;
+    private final CounterService counterService;
 
     @Autowired
-    private CounterService counterService;
+    public PersonServiceImpl(PersonRepository personRepository, CounterService counterService) {
+        this.personRepository = personRepository;
+        this.counterService = counterService;
+    }
 
     @Override
     @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)

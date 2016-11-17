@@ -23,17 +23,20 @@ import java.util.concurrent.Future;
 @RestController
 @RequestMapping(value = "/api/persons", produces = MediaType.APPLICATION_JSON_VALUE)
 @ExposesResourceFor(Person.class)
-public class PersonController extends BaseController{
+class PersonController extends BaseController{
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Autowired
-    private PersonService personService;
+
+    private final PersonService personService;
+    private final EmailService emailService;
+    private final EntityLinks entityLinks;
 
     @Autowired
-    private EmailService emailService;
-
-    @Autowired
-    private EntityLinks entityLinks;
+    public PersonController(PersonService personService, EmailService emailService, EntityLinks entityLinks) {
+        this.personService = personService;
+        this.emailService = emailService;
+        this.entityLinks = entityLinks;
+    }
 
     @RequestMapping(value = "", method = RequestMethod.GET)
     public ResponseEntity<Resources<Person>> getPersons(){
